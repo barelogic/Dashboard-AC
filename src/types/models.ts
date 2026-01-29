@@ -14,3 +14,13 @@ export interface Emergency {
 export interface EmergencyFilter {
     type: EmergencyType | "All";
 }
+
+// Drone status from Firebase Realtime Database
+export type DroneStatusType = "fire" | "medical" | "patrol";
+
+export interface DroneStatus {
+    lat: number;
+    long: number;
+    timestamp: number;
+    type: DroneStatusType;
+}

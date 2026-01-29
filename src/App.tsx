@@ -4,6 +4,7 @@ import { Footer } from "./components/Footer";
 import { EmergencyList } from "./components/EmergencyList";
 import { MapView } from "./components/MapView";
 import { useEmergencies } from "./hooks/useEmergencies";
+import { useDroneStatus } from "./hooks/useDroneStatus";
 import "./App.css";
 
 function App() {
@@ -17,6 +18,9 @@ function App() {
     isLoading,
     isFirebaseEnabled,
   } = useEmergencies();
+
+  // Real-time drone status from Firebase RTDB
+  const { droneStatus } = useDroneStatus();
 
   return (
     <div className="h-screen flex flex-col bg-slate-50 text-slate-900">
@@ -32,12 +36,13 @@ function App() {
             onAddEmergency={addEmergency}
             onStatusChange={updateStatus}
             isLoading={isLoading}
+            droneStatus={droneStatus}
           />
         </aside>
 
         {/* Map View */}
         <section className="flex-1">
-          <MapView emergencies={emergencies} onStatusChange={updateStatus} />
+          <MapView emergencies={emergencies} onStatusChange={updateStatus} droneStatus={droneStatus} />
         </section>
       </main>
 

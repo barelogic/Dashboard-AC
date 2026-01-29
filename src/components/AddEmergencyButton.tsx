@@ -8,7 +8,7 @@ interface AddEmergencyButtonProps {
 export const AddEmergencyButton: React.FC<AddEmergencyButtonProps> = ({ onAdd }) => {
     return (
         <button
-            onClick={onAdd}
+            onClick={() => onAdd()}
             className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-medium py-2.5 px-4 rounded-lg text-sm transition-all duration-200 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 active:scale-[0.98] flex items-center justify-center gap-2"
         >
             <svg

@@ -10,35 +10,40 @@ import {
 import { getMockEmergencies } from "../data/mockData";
 
 export const useEmergencies = () => {
-    const [emergencies, setEmergencies] = useState<Emergency[]>([]);
+    // Separate state for Firebase and Local data to prevent sync conflicts
+    const [firebaseEmergencies, setFirebaseEmergencies] = useState<Emergency[]>([]);
+    const [localEmergencies, setLocalEmergencies] = useState<Emergency[]>([]);
+
     const [filter, setFilter] = useState<EmergencyType | "All">("All");
     const [isLoading, setIsLoading] = useState(true);
     const [isFirebaseEnabled, setIsFirebaseEnabled] = useState(false);
-    const [localEmergencies, setLocalEmergencies] = useState<Emergency[]>([]);
 
+    // Initialization Effect: Run once to determine mode
     useEffect(() => {
         const firebaseInitialized = initializeFirebase();
         setIsFirebaseEnabled(firebaseInitialized);
 
-        if (firebaseInitialized) {
+        // If not firebase, ensure we have initial mock data
+        if (!firebaseInitialized) {
+            setLocalEmergencies(getMockEmergencies());
+            setIsLoading(false);
+        }
+    }, []);
+
+    // Firebase Subscription Effect
+    useEffect(() => {
+        if (isFirebaseEnabled) {
+            setIsLoading(true);
             const unsubscribe = subscribeToEmergencies((data) => {
-                setEmergencies(data);
+                setFirebaseEmergencies(data);
                 setIsLoading(false);
             });
             return () => unsubscribe();
-        } else {
-            // Use mock data
-            // Check if we have local mock data, otherwise load initial mock data
-            if (localEmergencies.length === 0) {
-                const mockData = getMockEmergencies();
-                setLocalEmergencies(mockData);
-                setEmergencies(mockData);
-            } else {
-                setEmergencies(localEmergencies);
-            }
-            setIsLoading(false);
         }
-    }, [localEmergencies.length]);
+    }, [isFirebaseEnabled]);
+
+    // DERIVED STATE: The source of truth for the UI
+    const emergencies = isFirebaseEnabled ? firebaseEmergencies : localEmergencies;
 
     // Filtered emergencies
     const filteredEmergencies = emergencies.filter(
@@ -51,8 +56,10 @@ export const useEmergencies = () => {
     // Add new emergency
     const addEmergency = useCallback(
         async (type?: EmergencyType) => {
+            // Ensure type is a valid string/EmergencyType
+            const isValidType = type && typeof type === 'string';
             const randomType: EmergencyType =
-                type || (["Fire", "Medical", "Patrol"] as EmergencyType[])[Math.floor(Math.random() * 3)];
+                isValidType ? type : (["Fire", "Medical", "Patrol"] as EmergencyType[])[Math.floor(Math.random() * 3)];
 
             // Random location near Coimbatore (±0.05 degrees)
             const latitude = 11.0168 + (Math.random() - 0.5) * 0.1;
@@ -61,7 +68,7 @@ export const useEmergencies = () => {
             if (isFirebaseEnabled) {
                 await addEmergencyService(latitude, longitude, randomType);
             } else {
-                // Local mock mode
+                // Local mock mode: Directly update local state
                 const newEmergency: Emergency = {
                     id: `local-${Date.now()}`,
                     latitude,
@@ -71,7 +78,6 @@ export const useEmergencies = () => {
                     timestamp: new Date(),
                 };
                 setLocalEmergencies((prev) => [...prev, newEmergency]);
-                setEmergencies((prev) => [...prev, newEmergency]);
             }
         },
         [isFirebaseEnabled]
@@ -83,11 +89,8 @@ export const useEmergencies = () => {
             if (isFirebaseEnabled) {
                 await updateStatusService(id, status);
             } else {
-                // Local mock mode
+                // Local mock mode: Directly update local state
                 setLocalEmergencies((prev) =>
-                    prev.map((e) => (e.id === id ? { ...e, status } : e))
-                );
-                setEmergencies((prev) =>
                     prev.map((e) => (e.id === id ? { ...e, status } : e))
                 );
             }

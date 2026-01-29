@@ -11,6 +11,36 @@
 
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, addDoc, Timestamp, getDocs, deleteDoc, doc } from 'firebase/firestore';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Helper to load env file manually if needed
+const loadEnv = () => {
+    try {
+        const envPath = path.resolve(__dirname, '../.env');
+        if (fs.existsSync(envPath)) {
+            const envContent = fs.readFileSync(envPath, 'utf-8');
+            envContent.split('\n').forEach(line => {
+                const match = line.match(/^([^=]+)=(.*)$/);
+                if (match) {
+                    const key = match[1].trim();
+                    const value = match[2].trim();
+                    if (!process.env[key]) {
+                        process.env[key] = value;
+                    }
+                }
+            });
+        }
+    } catch (e) {
+        console.log('Could not load .env file manually');
+    }
+};
+
+loadEnv();
 
 // Load environment variables (when running with tsx/node)
 const firebaseConfig = {

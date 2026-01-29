@@ -1,5 +1,5 @@
-// Firebase configuration and Firestore operations
-import { initializeApp, type FirebaseApp } from "firebase/app";
+// Firebase configuration and Firestore/Realtime Database operations
+import { initializeApp, type FirebaseApp, getApps, getApp } from "firebase/app";
 import {
     getFirestore,
     collection,
@@ -10,7 +10,13 @@ import {
     type Firestore,
     Timestamp,
 } from "firebase/firestore";
-import type { Emergency, EmergencyType, EmergencyStatus } from "../types/models";
+import {
+    getDatabase,
+    ref,
+    onValue,
+    type Database,
+} from "firebase/database";
+import type { Emergency, EmergencyType, EmergencyStatus, DroneStatus } from "../types/models";
 import { getMockEmergencies } from "../data/mockData";
 
 // Firebase configuration - Replace with your own config
@@ -21,10 +27,12 @@ const firebaseConfig = {
     storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "",
     messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "",
     appId: import.meta.env.VITE_FIREBASE_APP_ID || "",
+    databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL || "https://drone-rescue-system-default-rtdb.firebaseio.com",
 };
 
 let app: FirebaseApp | null = null;
 let db: Firestore | null = null;
+let rtdb: Database | null = null;
 
 // Check if Firebase is configured
 const isFirebaseConfigured = (): boolean => {
@@ -39,8 +47,13 @@ export const initializeFirebase = (): boolean => {
     }
 
     try {
-        app = initializeApp(firebaseConfig);
+        if (getApps().length === 0) {
+            app = initializeApp(firebaseConfig);
+        } else {
+            app = getApp();
+        }
         db = getFirestore(app);
+        rtdb = getDatabase(app);
         return true;
     } catch (error) {
         console.error("Failed to initialize Firebase:", error);
@@ -112,4 +125,30 @@ export const updateEmergencyStatus = async (
         console.error("Failed to update emergency:", error);
         return false;
     }
+};
+
+// Subscribe to drone status from Firebase Realtime Database
+export const subscribeToDroneStatus = (
+    callback: (droneStatus: DroneStatus | null) => void
+): (() => void) => {
+    if (!rtdb) {
+        console.log("Realtime Database not initialized");
+        callback(null);
+        return () => { };
+    }
+
+    const droneStatusRef = ref(rtdb, "drone_status");
+    return onValue(droneStatusRef, (snapshot) => {
+        if (snapshot.exists()) {
+            const data = snapshot.val() as DroneStatus;
+            console.log("Drone status update received:", data);
+            callback(data);
+        } else {
+            console.log("No drone status data available");
+            callback(null);
+        }
+    }, (error) => {
+        console.error("Error listening to drone status:", error);
+        callback(null);
+    });
 };

@@ -114,3 +114,20 @@ body {
 .animate-pulse-ring {
   animation: pulse-ring 1.5s ease-out infinite;
 }
+
+/* Drone marker pulse animation */
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.8);
+  }
+}
+
+.drone-marker {
+  background: transparent !important;
+  border: none !important;
+}
