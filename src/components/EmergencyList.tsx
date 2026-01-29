@@ -28,6 +28,8 @@ interface EmergencyListProps {
     onStatusChange: (id: string, status: EmergencyStatus) => void;
     isLoading: boolean;
     droneStatus?: DroneStatus | null;
+    droneAlertStatus?: EmergencyStatus;
+    onDroneAlertStatusChange?: (status: EmergencyStatus) => void;
 }
 
 export const EmergencyList: React.FC<EmergencyListProps> = ({
@@ -38,6 +40,8 @@ export const EmergencyList: React.FC<EmergencyListProps> = ({
     onStatusChange,
     isLoading,
     droneStatus,
+    droneAlertStatus = "pending",
+    onDroneAlertStatusChange,
 }) => {
     const formatTimestamp = (timestamp: Date | { toDate: () => Date }) => {
         const date = timestamp instanceof Date ? timestamp : timestamp.toDate();
@@ -129,10 +133,17 @@ export const EmergencyList: React.FC<EmergencyListProps> = ({
                                             >
                                                 {droneStatus.type} Alert
                                             </span>
-                                            <span className="text-xs text-green-600 font-medium flex items-center gap-1">
-                                                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                                                LIVE
-                                            </span>
+                                            {onDroneAlertStatusChange ? (
+                                                <StatusToggle
+                                                    currentStatus={droneAlertStatus}
+                                                    onStatusChange={onDroneAlertStatusChange}
+                                                />
+                                            ) : (
+                                                <span className="text-xs text-green-600 font-medium flex items-center gap-1">
+                                                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                                                    LIVE
+                                                </span>
+                                            )}
                                         </div>
                                         <div className="text-sm text-slate-600 mt-1">
                                             Real-time location update

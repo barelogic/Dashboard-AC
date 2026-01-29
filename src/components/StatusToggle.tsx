@@ -41,11 +41,12 @@ export const StatusToggle: React.FC<StatusToggleProps> = ({
 
     return (
         <button
+            type="button"
             onClick={(e) => {
                 e.stopPropagation();
                 cycleStatus();
             }}
-            className={`px-2.5 py-1 rounded-md text-xs font-medium border transition-all duration-200 ${config.bgColor} ${config.color}`}
+            className={`px-2.5 py-1 rounded-md text-xs font-medium border transition-all duration-200 cursor-pointer ${config.bgColor} ${config.color}`}
         >
             {config.label}
         </button>

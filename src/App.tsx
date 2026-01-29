@@ -1,10 +1,12 @@
 // Main App component
+import { useState } from "react";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
 import { EmergencyList } from "./components/EmergencyList";
 import { MapView } from "./components/MapView";
 import { useEmergencies } from "./hooks/useEmergencies";
 import { useDroneStatus } from "./hooks/useDroneStatus";
+import type { EmergencyStatus } from "./types/models";
 import "./App.css";
 
 function App() {
@@ -22,6 +24,9 @@ function App() {
   // Real-time drone status from Firebase RTDB
   const { droneStatus } = useDroneStatus();
 
+  // Local state for drone alert status (pending, in-progress, resolved)
+  const [droneAlertStatus, setDroneAlertStatus] = useState<EmergencyStatus>("pending");
+
   return (
     <div className="h-screen flex flex-col bg-slate-50 text-slate-900">
       <Header isFirebaseEnabled={isFirebaseEnabled} />
@@ -37,6 +42,8 @@ function App() {
             onStatusChange={updateStatus}
             isLoading={isLoading}
             droneStatus={droneStatus}
+            droneAlertStatus={droneAlertStatus}
+            onDroneAlertStatusChange={setDroneAlertStatus}
           />
         </aside>
 
